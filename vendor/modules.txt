@@ -1,0 +1,11 @@
+# github.com/appscode/go v0.0.0-20190424183524-60025f1135c9
+github.com/appscode/go/net
+github.com/appscode/go/sets
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
+# github.com/spf13/afero v1.2.2
+github.com/spf13/afero
+github.com/spf13/afero/mem
+# golang.org/x/text v0.3.0
+golang.org/x/text/transform
+golang.org/x/text/unicode/norm
