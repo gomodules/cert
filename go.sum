@@ -403,8 +403,8 @@ golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8T
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-gomodules.xyz/blobfs v0.1.0 h1:GIRBfhVz/UP4ml1YsdVrDpi4IclXIG1N14UDpVUMrF0=
-gomodules.xyz/blobfs v0.1.0/go.mod h1:DTBwaFUwRuDuk/rqpmgINkmo1fQR8oNMjj1DihfCpg4=
+gomodules.xyz/blobfs v0.1.1 h1:FaoHMnZTHMe1PfWBeOj0VRQ+HcjXY9sJilfPFLW9yEY=
+gomodules.xyz/blobfs v0.1.1/go.mod h1:BorUG/XXbImFG51pMb7mFDnS/mCjrqshFLvfBEMteOQ=
 gomodules.xyz/version v0.1.0/go.mod h1:Y8xuV02mL/45psyPKG3NCVOwvAOy6T5Kx0l3rCjKSjU=
 google.golang.org/api v0.4.0/go.mod h1:8k5glujaEP+g9n7WNsDg8QP6cUVNI86fCNMcbazEtwE=
 google.golang.org/api v0.5.0/go.mod h1:8k5glujaEP+g9n7WNsDg8QP6cUVNI86fCNMcbazEtwE=

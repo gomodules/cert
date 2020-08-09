@@ -55,7 +55,7 @@ golang.org/x/text/unicode/norm
 # golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# gomodules.xyz/blobfs v0.1.0
+# gomodules.xyz/blobfs v0.1.1
 gomodules.xyz/blobfs
 # google.golang.org/genproto v0.0.0-20200608115520-7c474a2e3482
 google.golang.org/genproto/googleapis/rpc/status
