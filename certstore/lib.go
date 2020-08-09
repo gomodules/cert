@@ -1,9 +1,12 @@
 package certstore
 
 import (
+	"bytes"
+	"context"
 	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -11,7 +14,7 @@ import (
 
 	netz "github.com/appscode/go/net"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
+	"gocloud.dev/blob"
 	"gomodules.xyz/cert"
 )
 
@@ -35,7 +38,7 @@ func SANsForIPs(s string, ips ...string) cert.AltNames {
 }
 
 type CertStore struct {
-	fs           afero.Fs
+	storageURL   string
 	dir          string
 	organization []string
 	prefix       string
@@ -44,12 +47,12 @@ type CertStore struct {
 	caCert       *x509.Certificate
 }
 
-func NewCertStore(fs afero.Fs, dir string, organization ...string) (*CertStore, error) {
-	err := fs.MkdirAll(dir, 0755)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create dir `%s`", dir)
-	}
-	return &CertStore{fs: fs, dir: dir, ca: "ca", organization: append([]string(nil), organization...)}, nil
+func NewCertStore(storageURL string, dir string, organization ...string) (*CertStore, error) {
+	return &CertStore{storageURL: storageURL, dir: dir, ca: "ca", organization: append([]string(nil), organization...)}, nil
+}
+
+func NewInMemoryCertStore(dir string, organization ...string) (*CertStore, error) {
+	return NewCertStore("mem://", dir, organization...)
 }
 
 func (s *CertStore) InitCA(prefix ...string) error {
@@ -88,8 +91,8 @@ func (s *CertStore) LoadCA(prefix ...string) error {
 	}
 
 	// only ca key found, extract ca cert from it.
-	if _, err := s.fs.Stat(s.KeyFile(s.ca)); err == nil {
-		keyBytes, err := afero.ReadFile(s.fs, s.KeyFile(s.ca))
+	if found, err := s.Exists(context.TODO(), s.KeyFile(s.ca)); err == nil && found {
+		keyBytes, err := s.ReadFile(context.TODO(), s.KeyFile(s.ca))
 		if err != nil {
 			return errors.Wrapf(err, "failed to read private key `%s`", s.KeyFile(s.ca))
 		}
@@ -293,10 +296,10 @@ func (s *CertStore) IsExists(name string, prefix ...string) bool {
 		panic(err)
 	}
 
-	if _, err := s.fs.Stat(s.CertFile(name)); err == nil {
+	if found, err := s.Exists(context.TODO(), s.CertFile(name)); err == nil && found {
 		return true
 	}
-	if _, err := s.fs.Stat(s.KeyFile(name)); err == nil {
+	if found, err := s.Exists(context.TODO(), s.KeyFile(name)); err == nil && found {
 		return true
 	}
 	return false
@@ -307,8 +310,8 @@ func (s *CertStore) PairExists(name string, prefix ...string) bool {
 		panic(err)
 	}
 
-	if _, err := s.fs.Stat(s.CertFile(name)); err == nil {
-		if _, err := s.fs.Stat(s.KeyFile(name)); err == nil {
+	if f1, err := s.Exists(context.TODO(), s.CertFile(name)); err == nil && f1 {
+		if f2, err := s.Exists(context.TODO(), s.KeyFile(name)); err == nil && f2 {
 			return true
 		}
 	}
@@ -332,27 +335,27 @@ func (s *CertStore) KeyFile(name string) string {
 }
 
 func (s *CertStore) Write(name string, crt *x509.Certificate, key *rsa.PrivateKey) error {
-	if err := afero.WriteFile(s.fs, s.CertFile(name), cert.EncodeCertPEM(crt), 0644); err != nil {
+	if err := s.WriteFile(context.TODO(), s.CertFile(name), cert.EncodeCertPEM(crt)); err != nil {
 		return errors.Wrapf(err, "failed to write `%s`", s.CertFile(name))
 	}
-	if err := afero.WriteFile(s.fs, s.KeyFile(name), cert.EncodePrivateKeyPEM(key), 0600); err != nil {
+	if err := s.WriteFile(context.TODO(), s.KeyFile(name), cert.EncodePrivateKeyPEM(key)); err != nil {
 		return errors.Wrapf(err, "failed to write `%s`", s.KeyFile(name))
 	}
 	return nil
 }
 
 func (s *CertStore) WriteBytes(name string, crt, key []byte) error {
-	if err := afero.WriteFile(s.fs, s.CertFile(name), crt, 0644); err != nil {
+	if err := s.WriteFile(context.TODO(), s.CertFile(name), crt); err != nil {
 		return errors.Wrapf(err, "failed to write `%s`", s.CertFile(name))
 	}
-	if err := afero.WriteFile(s.fs, s.KeyFile(name), key, 0600); err != nil {
+	if err := s.WriteFile(context.TODO(), s.KeyFile(name), key); err != nil {
 		return errors.Wrapf(err, "failed to write `%s`", s.KeyFile(name))
 	}
 	return nil
 }
 
 func (s *CertStore) Read(name string) (*x509.Certificate, *rsa.PrivateKey, error) {
-	crtBytes, err := afero.ReadFile(s.fs, s.CertFile(name))
+	crtBytes, err := s.ReadFile(context.TODO(), s.CertFile(name))
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "failed to read certificate `%s`", s.CertFile(name))
 	}
@@ -361,7 +364,7 @@ func (s *CertStore) Read(name string) (*x509.Certificate, *rsa.PrivateKey, error
 		return nil, nil, errors.Wrapf(err, "failed to parse certificate `%s`", s.CertFile(name))
 	}
 
-	keyBytes, err := afero.ReadFile(s.fs, s.KeyFile(name))
+	keyBytes, err := s.ReadFile(context.TODO(), s.KeyFile(name))
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "failed to read private key `%s`", s.KeyFile(name))
 	}
@@ -373,12 +376,12 @@ func (s *CertStore) Read(name string) (*x509.Certificate, *rsa.PrivateKey, error
 }
 
 func (s *CertStore) ReadBytes(name string) ([]byte, []byte, error) {
-	crtBytes, err := afero.ReadFile(s.fs, s.CertFile(name))
+	crtBytes, err := s.ReadFile(context.TODO(), s.CertFile(name))
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "failed to read certificate `%s`", s.CertFile(name))
 	}
 
-	keyBytes, err := afero.ReadFile(s.fs, s.KeyFile(name))
+	keyBytes, err := s.ReadFile(context.TODO(), s.KeyFile(name))
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "failed to read private key `%s`", s.KeyFile(name))
 	}
@@ -415,4 +418,80 @@ func getCN(sans cert.AltNames) string {
 		return sans.IPs[0].String()
 	}
 	return ""
+}
+
+func (s *CertStore) WriteFile(ctx context.Context, path string, data []byte) error {
+	dir, filename := filepath.Split(path)
+	bucket, err := s.openBucket(ctx, dir)
+	if err != nil {
+		return err
+	}
+	defer bucket.Close()
+
+	w, err := bucket.NewWriter(ctx, filename, nil)
+	if err != nil {
+		return err
+	}
+	_, writeErr := w.Write(data)
+	// Always check the return value of Close when writing.
+	closeErr := w.Close()
+	if writeErr != nil {
+		return writeErr
+	}
+	if closeErr != nil {
+		return closeErr
+	}
+	return nil
+}
+
+func (s *CertStore) ReadFile(ctx context.Context, path string) ([]byte, error) {
+	dir, filename := filepath.Split(path)
+	bucket, err := s.openBucket(ctx, dir)
+	if err != nil {
+		return nil, err
+	}
+	defer bucket.Close()
+	// Open the key "foo.txt" for reading with the default options.
+	r, err := bucket.NewReader(ctx, filename, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, r); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (s *CertStore) Exists(ctx context.Context, path string) (bool, error) {
+	dir, filename := filepath.Split(path)
+	bucket, err := s.openBucket(ctx, dir)
+	if err != nil {
+		return false, err
+	}
+	defer bucket.Close()
+
+	return bucket.Exists(context.TODO(), filename)
+}
+
+func (s *CertStore) SignedURL(ctx context.Context, path string) (string, error) {
+	dir, filename := filepath.Split(path)
+	bucket, err := s.openBucket(ctx, dir)
+	if err != nil {
+		return "", err
+	}
+	defer bucket.Close()
+
+	return bucket.SignedURL(ctx, filename, nil)
+}
+
+func (s *CertStore) openBucket(ctx context.Context, dir string) (*blob.Bucket, error) {
+	bucket, err := blob.OpenBucket(ctx, s.storageURL)
+	if err != nil {
+		return nil, err
+	}
+	return blob.PrefixedBucket(bucket, strings.Trim(dir, "/")+"/"), nil
 }
