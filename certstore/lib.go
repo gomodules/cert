@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 
 	netz "github.com/appscode/go/net"
@@ -317,7 +317,7 @@ func (s *CertStore) CertFile(name string) string {
 	if s.prefix != "" {
 		filename = s.prefix + filename
 	}
-	return filepath.Join(s.dir, filename)
+	return path.Join(s.dir, filename)
 }
 
 func (s *CertStore) KeyFile(name string) string {
@@ -325,7 +325,7 @@ func (s *CertStore) KeyFile(name string) string {
 	if s.prefix != "" {
 		filename = s.prefix + filename
 	}
-	return filepath.Join(s.dir, filename)
+	return path.Join(s.dir, filename)
 }
 
 func (s *CertStore) Write(name string, crt *x509.Certificate, key *rsa.PrivateKey) error {
