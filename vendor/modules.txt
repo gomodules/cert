@@ -1,9 +1,6 @@
-# github.com/appscode/go v0.0.0-20191119085241-0887d8ec2ecc
-github.com/appscode/go/net
-github.com/appscode/go/sets
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 github.com/golang/groupcache/lru
-# github.com/golang/protobuf v1.4.2
+# github.com/golang/protobuf v1.4.3
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
@@ -57,6 +54,10 @@ golang.org/x/xerrors
 golang.org/x/xerrors/internal
 # gomodules.xyz/blobfs v0.1.2
 gomodules.xyz/blobfs
+# gomodules.xyz/sets v0.0.0-20200930152147-4f4543544799
+gomodules.xyz/sets
+# gomodules.xyz/x v0.0.0-20201105065653-91c568df6331
+gomodules.xyz/x/net
 # google.golang.org/genproto v0.0.0-20200608115520-7c474a2e3482
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.29.1
