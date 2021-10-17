@@ -193,12 +193,13 @@ func ParseCertsPEM(pemCerts []byte) ([]*x509.Certificate, error) {
 	return certs, nil
 }
 
-// ParseRootCAs returns a list of self-signed root CA x509.Certificates contained in the given PEM-encoded byte array
+// ParseRootCAs returns a list of self-signed root CA x509.Certificates and non-root x509.Certificates contained in the given PEM-encoded byte array
 // Returns an error if a certificate could not be parsed
 // For self-signed certs, the Issuer and Subject fields are equal. For a self-signed certificate the
 // Authority Key Identifier will either be absent or have the same value as the Subject Key Identifier.
 // See also: https://security.stackexchange.com/a/162263
-func ParseRootCAs(rest []byte) ([]*x509.Certificate, error) {
+func ParseRootCAs(rest []byte) ([]*x509.Certificate, []*x509.Certificate, error) {
+	var caCerts []*x509.Certificate
 	var certs []*x509.Certificate
 
 	var block *pem.Block
@@ -214,19 +215,23 @@ func ParseRootCAs(rest []byte) ([]*x509.Certificate, error) {
 
 		c, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			return certs, err
+			return caCerts, certs, err
 		}
 		if !c.IsCA {
+			certs = append(certs, c)
 			continue
 		}
 		if !reflect.DeepEqual(c.Issuer, c.Subject) {
+			certs = append(certs, c)
 			continue
 		}
 		if len(c.AuthorityKeyId) == 0 || bytes.Equal(c.SubjectKeyId, c.AuthorityKeyId) {
+			caCerts = append(caCerts, c)
+		} else {
 			certs = append(certs, c)
 		}
 	}
-	return certs, nil
+	return caCerts, certs, nil
 }
 
 // parseRSAPublicKey parses a single RSA public key from the provided data
