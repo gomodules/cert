@@ -33,7 +33,7 @@ func TestMakeCSR(t *testing.T) {
 	dnsSANs := []string{"localhost"}
 	ipSANs := []net.IP{net.ParseIP("127.0.0.1")}
 
-	keyData, err := ioutil.ReadFile(keyFile)
+	keyData, err := os.ReadFile(keyFile)
 	if err != nil {
 		t.Fatal(err)
 	}
