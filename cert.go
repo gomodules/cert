@@ -29,11 +29,11 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"math/big"
 	"net"
 	"path"
+	"os"
 	"strings"
 	"time"
 )

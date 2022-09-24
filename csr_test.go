@@ -20,8 +20,8 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"io/ioutil"
 	"net"
+	"os"
 	"testing"
 )
 
