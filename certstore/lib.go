@@ -45,8 +45,8 @@ type CertStore struct {
 	caCert       *x509.Certificate
 }
 
-func New(fs blobfs.Interface, dir string, organization ...string) (*CertStore, error) {
-	return &CertStore{fs: fs, dir: dir, ca: "ca", organization: append([]string(nil), organization...)}, nil
+func New(fs blobfs.Interface, dir string, organization ...string) *CertStore {
+	return &CertStore{fs: fs, dir: dir, ca: "ca", organization: append([]string(nil), organization...)}
 }
 
 func (s *CertStore) InitCA(prefix ...string) error {
