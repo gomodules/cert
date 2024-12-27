@@ -14,8 +14,8 @@ require (
 	github.com/googleapis/gax-go/v2 v2.2.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	gocloud.dev v0.26.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gomodules.xyz/sets v0.2.1 // indirect
